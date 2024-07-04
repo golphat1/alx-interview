@@ -18,61 +18,57 @@ def isWinner(x, nums):
     Raises:
         None.
     """
-    # Check for invalid input
-    if x <= 0 or nums is None:
+    if x <= 0 or not nums:
         return None
-    if x != len(nums):
-        return None
-    # Initialize scores and array of possible prime numbers
-    ben = 0
-    maria = 0
-    # Create a list 'a' of length sorted(nums)[-1] + 1 with all elements
-    # initialized to 1
-    a = [1 for x in range(sorted(nums)[-1] + 1)]
-    # The first two elements of the list, a[0] and a[1], are set to 0
-    # because 0 and 1 are not prime numbers
-    a[0], a[1] = 0, 0
-    # Use Sieve of Eratosthenes algorithm to generate array of prime numbers
-    for i in range(2, len(a)):
-        rm_multiples(a, i)
-    # Play each round of the game
-    for i in nums:
-        # If the sum of prime numbers in the set is even, Ben wins
-        if sum(a[0:i + 1]) % 2 == 0:
-            ben += 1
+
+    max_n = max(nums)
+    primes = sieve(max_n)
+
+    maria_wins = 0
+    ben_wins = 0
+
+    for n in nums:
+        primes_in_game = [p for p in primes if p <= n]
+        if not primes_in_game:
+            ben_wins += 1
+            continue
+
+        moves = 0
+        while primes_in_game:
+            prime = primes_in_game[0]
+            multiples = range(prime, n + 1, prime)
+            primes_in_game = [p for p in primes_in_game if p not in multiples]
+            moves += 1
+
+        if moves % 2 == 1:
+            maria_wins += 1
         else:
-            maria += 1
-    # Determine the winner of the game
-    if ben > maria:
-        return "Ben"
-    if maria > ben:
+            ben_wins += 1
+
+    if maria_wins > ben_wins:
         return "Maria"
-    return None
+    elif ben_wins > maria_wins:
+        return "Ben"
+    else:
+        return None
 
-
-def rm_multiples(ls, x):
+def sieve(n):
     """
-    Removes multiples of a prime number from an array of possible prime
-    numbers.
+    Generates a list of prime numbers up to n using the Sieve of Eratosthenes.
 
     Args:
-        ls (list of int): An array of possible prime numbers.
-        x (int): The prime number to remove multiples of.
+        n (int): The upper limit for generating prime numbers.
 
     Returns:
-        None.
-
-    Raises:
-        None.
+        list: A list of prime numbers up to n.
     """
-    # This loop iterates over multiples of a prime number and marks them as
-    # non-prime by setting their corresponding value to 0 in the input
-    # list ls. Starting from 2, it sets every multiple of x up to the
-    # length of ls to 0. If the index i * x is out of range for the list ls,
-    # the try block will raise an IndexError exception, and the loop will
-    # terminate using the break statement.
-    for i in range(2, len(ls)):
-        try:
-            ls[i * x] = 0
-        except (ValueError, IndexError):
-            break
+    is_prime = [True] * (n + 1)
+    is_prime[0] = is_prime[1] = False
+
+    for i in range(2, int(n**0.5) + 1):
+        if is_prime[i]:
+            for j in range(i*i, n + 1, i):
+                is_prime[j] = False
+
+    primes = [i for i in range(2, n + 1) if is_prime[i]]
+    return primes
